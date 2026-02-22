@@ -1,3 +1,4 @@
+python==3.11.9
 Flask==3.1.2
 Flask-CORS==4.0.0
 pandas==2.0.3
