@@ -12,6 +12,7 @@ import io
 
 warnings.filterwarnings('ignore')
 
+
 app = Flask(__name__)
 CORS(app)
 
@@ -95,14 +96,22 @@ def get_statistics():
 init_db()
 
 # Load the trained model (best model from training)
-script_dir = Path(__file__).resolve().parent
-model_path = script_dir / "student_pass_lr.joblib"  # Updated to use best model
-if not model_path.exists():
-    # Fallback to MLP if LR doesn't exist
-    model_path = script_dir / "student_pass_mlp.joblib"
-model = joblib.load(model_path)
-print(f"Loaded model from: {model_path.name}")
+model = None
 
+def load_model():
+    global model
+    script_dir = Path(__file__).resolve().parent
+
+    model_path = script_dir / "student_pass_lr.joblib"
+
+    if not model_path.exists():
+        model_path = script_dir / "student_pass_mlp.joblib"
+
+    if model_path.exists():
+        model = joblib.load(model_path)
+        print(f"Loaded model from: {model_path.name}")
+    else:
+        print("Model file not found!")
 @app.route('/')
 def index():
     """Render the home page with prediction form"""
@@ -111,6 +120,10 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     """API endpoint to make predictions"""
+
+    if model is None:
+        return jsonify({'success': False, 'error': 'Model not loaded'}), 500
+
     try:
         # Get data from form
         data = request.json
@@ -162,7 +175,8 @@ def predict():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 400
-
+        
+load_model()
 @app.route('/history')
 def history():
     """Get prediction history"""
@@ -213,3 +227,4 @@ if __name__ == '__main__':
     print("Starting Flask app on http://localhost:5000")
     print("Open your browser and navigate to http://localhost:5000")
     app.run(debug=True, port=5000)
+
