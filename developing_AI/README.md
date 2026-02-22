@@ -1,4 +1,4 @@
-# Student Pass/Fail Prediction AI
+# Student Pass/Fail Prediction AI:
 
 A production-ready AI model that predicts whether a student will pass or fail based on their academic metrics.
 
