@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Pass/Fail Predictor AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result.pass {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .result.fail {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .result-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .result-prob {
+            font-size: 14px;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #0c5aa0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Student Pass/Fail Predictor</h1>
+            <p>AI-powered prediction using your trained model</p>
+            <div style="margin-top: 15px;">
+                <a href="/" style="color: #667eea; text-decoration: none; margin-right: 20px; font-weight: 500;">Predictor</a>
+                <a href="/dashboard" style="color: #667eea; text-decoration: none; font-weight: 500;">Dashboard</a>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            Enter student details to predict if they will pass or fail
+        </div>
+        
+        <form id="predictionForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="marks">Current Marks (%)</label>
+                    <input type="number" id="marks" name="marks" min="0" max="100" required placeholder="0-100">
+                    <div class="input-hint">Student's current score</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="study_hours">Study Hours/Week</label>
+                    <input type="number" id="study_hours" name="study_hours" min="0" step="0.5" required placeholder="0-20">
+                    <div class="input-hint">Hours studying outside class</div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="attendance">Attendance (%)</label>
+                    <input type="number" id="attendance" name="attendance" min="0" max="100" required placeholder="0-100">
+                    <div class="input-hint">Class attendance percentage</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="previous_marks">Previous Year Marks (%)</label>
+                    <input type="number" id="previous_marks" name="previous_marks" min="0" max="100" required placeholder="0-100">
+                    <div class="input-hint">Last year's performance</div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="assignments">Assignments Submitted</label>
+                    <input type="number" id="assignments" name="assignments" min="0" max="10" required placeholder="0-10">
+                    <div class="input-hint">Number of assignments done</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="extracurricular">Extracurricular Score</label>
+                    <input type="number" id="extracurricular" name="extracurricular" min="0" max="10" required placeholder="0-10">
+                    <div class="input-hint">Involvement in activities</div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="parental_education">Parental Education Level</label>
+                    <select id="parental_education" name="parental_education" required>
+                        <option value="">-- Select --</option>
+                        <option value="0">0 (Below 10th)</option>
+                        <option value="1">1 (10-12th)</option>
+                        <option value="2">2 (Bachelor's)</option>
+                        <option value="3">3 (Master's)</option>
+                        <option value="4">4 (PhD)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="school_type">School Type</label>
+                    <select id="school_type" name="school_type" required>
+                        <option value="">-- Select --</option>
+                        <option value="public">Public</option>
+                        <option value="private">Private</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit">Predict Result</button>
+        </form>
+        
+        <div class="loader" id="loader"></div>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="error" id="error"></div>
+    </div>
+    
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loader = document.getElementById('loader');
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            
+            // Show loader
+            loader.style.display = 'block';
+            resultDiv.classList.remove('show');
+            errorDiv.classList.remove('show');
+            
+            try {
+                // Collect form data
+                const formData = {
+                    marks: parseFloat(document.getElementById('marks').value),
+                    study_hours: parseFloat(document.getElementById('study_hours').value),
+                    attendance: parseFloat(document.getElementById('attendance').value),
+                    previous_marks: parseFloat(document.getElementById('previous_marks').value),
+                    assignments: parseFloat(document.getElementById('assignments').value),
+                    extracurricular: parseFloat(document.getElementById('extracurricular').value),
+                    parental_education: parseFloat(document.getElementById('parental_education').value),
+                    school_type: document.getElementById('school_type').value
+                };
+                
+                // Make API request
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                loader.style.display = 'none';
+                
+                if (result.success) {
+                    // Display result
+                    const resultClass = result.prediction.includes('PASS') ? 'pass' : 'fail';
+                    resultDiv.className = `result show ${resultClass}`;
+                    resultDiv.innerHTML = `
+                        <div class="result-title">${result.prediction}</div>
+                        <div class="result-prob">
+                            Pass Probability: <strong>${result.pass_probability}%</strong><br>
+                            Fail Probability: <strong>${result.fail_probability}%</strong>
+                        </div>
+                    `;
+                } else {
+                    // Display error
+                    errorDiv.classList.add('show');
+                    errorDiv.textContent = `Error: ${result.error}`;
+                }
+            } catch (error) {
+                loader.style.display = 'none';
+                errorDiv.classList.add('show');
+                errorDiv.textContent = `Connection Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

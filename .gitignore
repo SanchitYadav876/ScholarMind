@@ -1,0 +1,11 @@
+﻿__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+.expo/
+*.apk
+*.aab
+dist/
+build/
+.DS_Store
+*.log

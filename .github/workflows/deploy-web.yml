@@ -1,0 +1,50 @@
+name: Deploy Web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Create docs folder
+        run: |
+          mkdir -p docs
+          cp "developing AI/templates/index.html" docs/ 2>/dev/null || cp web-assets/index.html docs/
+          cp "developing AI/templates/dashboard.html" docs/ 2>/dev/null || cp web-assets/predictor.html docs/
+      
+      - name: Create CNAME for custom domain (optional)
+        run: echo "scholarwind.com" > docs/CNAME
+        continue-on-error: true
+      
+      - name: Add redirect
+        run: |
+          cat > docs/dashboard.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta http-equiv="refresh" content="0; url=predictor.html" />
+            </head>
+            <body>
+              <p><a href="predictor.html">Click here if you are not redirected.</a></p>
+            </body>
+          </html>
+          EOF
+      
+      - name: Upload to GitHub Pages
+        uses: actions/upload-artifact@v3
+        with:
+          name: docs
+          path: docs
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          cname: scholarwind.com
